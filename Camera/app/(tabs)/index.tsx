@@ -1,32 +1,69 @@
-import React, { useEffect } from "react";
-import {useState,useRef,useCallback,useContext} from 'react';
-import {CameraView,CameraType,useCameraPermissions} from 'expo-camera';
-import Slider from '@react-native-community/slider';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useState } from 'react';
+import { Button, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-export default function CameraTab(){
-  const [facing,setFacing]=useState<'back'|'front'>('back');
-  const [cameraPermissions,requestPermissions]=useCameraPermissions();
-  const [zoom,setZoom]=useState(0);
-  const [isBarcodeMode,setBarcodeMode]=useState(false);
-  const [BarcodeResult,setBarcodeResult]=useState<string|null>(null);
-  const [capturedPhotos,setCapturedPhotos]=useState<Array<{uri:string}>>([]);
-  const CameraRef=useRef<CameraView>(null)
-  useEffect(()=>{
-LoadSavedPhotos();
-  },[])
-  const LoadSavedPhotos=useCallback(async ()=>{
-    try{
-      const SavedPhotos=await AsyncStorage.getItem('capturedPhotos');
-    }
-    if(SavedPhotos){
-      setCapturedPhotos(JSON.parse(savedPhotos))
-    }
+export default function App() {
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [permission, requestPermission] = useCameraPermissions();
+
+  if (!permission) {
+    
+    return <View />;
+  }
+
+  if (!permission.granted) {
   
-  },[]
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>We need your permission to show the camera</Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
+  }
 
-  )
-  return(
-<div></div>
-  )
+  function toggleCameraFacing() {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  }
+
+  return (
+    <View style={styles.container}>
+      <CameraView style={styles.camera} facing={facing}>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
+            <Text style={styles.text}>Flip Camera</Text>
+          </TouchableOpacity>
+        </View>
+      </CameraView>
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  message: {
+    textAlign: 'center',
+    paddingBottom: 10,
+  },
+  camera: {
+    flex: 1,
+  },
+  buttonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'transparent',
+    margin: 64,
+  },
+  button: {
+    flex: 1,
+    alignSelf: 'flex-end',
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+});
